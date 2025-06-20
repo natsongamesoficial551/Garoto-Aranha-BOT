@@ -1,22 +1,37 @@
 import os
 import discord
 from discord.ext import commands
+from flask import Flask
+from threading import Thread
 
-# Pega o token da variável de ambiente
+# === Servidor web fake para enganar o Render ===
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "✅ GarotoAranhaBOT está online!"
+
+def run():
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# === Token do Discord ===
 TOKEN = os.getenv("TOKEN")
 
-# Verificação simples para evitar o erro "NoneType"
 if TOKEN is None:
-    raise ValueError("O TOKEN do bot não foi definido. Configure a variável de ambiente 'TOKEN' no Render.")
+    raise ValueError("❌ O TOKEN do bot não foi definido. Configure a variável de ambiente 'TOKEN' no Render.")
 
-# Intents necessários (ajuste se quiser adicionar mais)
+# === Intents do bot ===
 intents = discord.Intents.default()
-intents.message_content = True  # Necessário para bots que leem mensagens
+intents.message_content = True  # Necessário para o bot ler mensagens
 
-# Instância do bot
+# === Instância do bot ===
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Evento simples pra teste
+# Evento: Quando o bot fica online
 @bot.event
 async def on_ready():
     print(f'✅ Bot conectado como {bot.user}')
@@ -26,5 +41,6 @@ async def on_ready():
 async def ping(ctx):
     await ctx.send('🏓 Pong!')
 
-# Inicializa o bot
+# === Mantém o web server vivo e inicia o bot ===
+keep_alive()
 bot.run(TOKEN)
