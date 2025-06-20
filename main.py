@@ -2,45 +2,50 @@ import os
 import discord
 from discord.ext import commands
 from flask import Flask
-from threading import Thread
+import threading
 
-# === Servidor web fake para enganar o Render ===
-app = Flask('')
+# --- Parte 1: Servidor Flask para o Render não derrubar a app ---
+app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "✅ GarotoAranhaBOT está online!"
+    return "✅ Bot Discord Rodando!"
 
 def run():
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
+    app.run(host='0.0.0.0', port=10000)
 
 def keep_alive():
-    t = Thread(target=run)
+    t = threading.Thread(target=run)
     t.start()
 
-# === Token do Discord ===
+# --- Parte 2: Bot Discord com carregamento automático de Cogs ---
 TOKEN = os.getenv("TOKEN")
 
 if TOKEN is None:
-    raise ValueError("❌ O TOKEN do bot não foi definido. Configure a variável de ambiente 'TOKEN' no Render.")
+    raise ValueError("❌ TOKEN não encontrado nas variáveis de ambiente do Render!")
 
-# === Intents do bot ===
 intents = discord.Intents.default()
-intents.message_content = True  # Necessário para o bot ler mensagens
+intents.message_content = True
+intents.guilds = True
+intents.members = True
 
-# === Instância do bot ===
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Evento: Quando o bot fica online
 @bot.event
 async def on_ready():
-    print(f'✅ Bot conectado como {bot.user}')
+    print(f"✅ Bot conectado como {bot.user}")
 
-# Exemplo de comando
-@bot.command()
-async def ping(ctx):
-    await ctx.send('🏓 Pong!')
+# Carregando todos os Cogs automaticamente
+for filename in os.listdir("./cogs"):
+    if filename.endswith(".py") and not filename.startswith("_"):
+        try:
+            bot.load_extension(f"cogs.{filename[:-3]}")
+            print(f"✅ Cog carregado: {filename}")
+        except Exception as e:
+            print(f"❌ Erro ao carregar o cog {filename}: {e}")
 
-# === Mantém o web server vivo e inicia o bot ===
+# Manter o Flask rodando em paralelo
 keep_alive()
+
+# Iniciar o bot
 bot.run(TOKEN)
