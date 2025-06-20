@@ -1,15 +1,14 @@
 import discord
 from discord.ext import commands
-import json
 import os
 import asyncio
 
-# Carregar configuração
-with open('config.json') as f:
-    config = json.load(f)
+# Carregar configuração das Environment Variables
+TOKEN = os.getenv("DISCORD_TOKEN")
+PREFIX = os.getenv("BOT_PREFIX", "!")  # Valor padrão caso não setar no Render
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix=config["PREFIX"], intents=intents)
+bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 
 @bot.event
 async def on_ready():
@@ -26,6 +25,6 @@ async def load_extensions():
 
 async def main():
     await load_extensions()
-    await bot.start(config["TOKEN"])
+    await bot.start(TOKEN)
 
 asyncio.run(main())
