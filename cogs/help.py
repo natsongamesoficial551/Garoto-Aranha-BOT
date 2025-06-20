@@ -121,23 +121,36 @@ class Help(commands.Cog):
             inline=False
         )
 
-        # 💡 Sugestões
+        # 🎂 Aniversários
         embed.add_field(
-            name="💡 Sugestões",
-            value="`!sugerir <mensagem>` - Envie uma sugestão para o servidor",
+            name="🎂 Aniversários",
+            value=(
+                "`!setaniversario <DD-MM>` - Salvar seu aniversário\n"
+                "`(Auto)` O bot dará os parabéns no dia certo"
+            ),
             inline=False
         )
 
-        # 🛡️ Logs / Proteções
+        # 📝 Tickets de Suporte
         embed.add_field(
-            name="🛡️ Proteções / Logs",
+            name="📝 Tickets de Suporte",
+            value=(
+                "`!ticket <motivo>` - Abrir um ticket de suporte\n"
+                "`!fecharticket` - Fechar o ticket atual"
+            ),
+            inline=False
+        )
+
+        # 🛡️ Logs / Proteções / Status
+        embed.add_field(
+            name="🛡️ Proteções / Logs / Status",
             value=(
                 "`(Auto)` Sistema de boas-vindas\n"
                 "`(Auto)` Sistema de saída\n"
                 "`(Auto)` Anti-link / Anti-invite\n"
                 "`(Auto)` Anti-palavrões\n"
                 "`(Auto)` Sistema de XP\n"
-                "`(Auto)` Slowmode e anti-flood (em breve se quiser)"
+                "`(Auto)` Status dinâmico: O status do bot muda automaticamente"
             ),
             inline=False
         )
