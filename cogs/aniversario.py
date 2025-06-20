@@ -1,59 +1,74 @@
 import discord
 from discord.ext import commands, tasks
 import json
+import os
 from datetime import datetime
 
-ID_CANAL_PARABENS = 1382522505603842110  # Mude para o ID do canal certo
+CAMINHO_JSON = 'C:\Users\Admin\GarotoAranhaBot\cogs\aniversarios.json'
+CANAL_ANIVERSARIOS = 1382522505603842110  # ✅ Troque pelo ID do canal onde as mensagens vão ser enviadas
 
 def carregar_aniversarios():
-    try:
-        with open('aniversarios.json', 'r') as f:
+    if os.path.exists(CAMINHO_JSON):
+        with open(CAMINHO_JSON, 'r') as f:
             return json.load(f)
-    except FileNotFoundError:
+    else:
         return {}
 
 def salvar_aniversarios(aniversarios):
-    with open('aniversarios.json', 'w') as f:
+    with open(CAMINHO_JSON, 'w') as f:
         json.dump(aniversarios, f, indent=4)
 
 class Aniversario(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.aniversarios = carregar_aniversarios()
-        self.checar_aniversarios.start()
+        self.verificar_aniversarios.start()
 
-    @commands.command()
-    async def setaniversario(self, ctx, data):
+    def cog_unload(self):
+        self.verificar_aniversarios.cancel()
+
+    @commands.command(name='setaniversario')
+    async def set_aniversario(self, ctx, *, data):
         """
-        Salva o aniversário do usuário no formato DD-MM (Ex: 20-06)
+        Salva a data de aniversário do usuário no formato DD/MM.
+        Exemplo: !setaniversario 20/06
         """
-        try:
-            datetime.strptime(data, '%d-%m')
-            self.aniversarios[str(ctx.author.id)] = data
-            salvar_aniversarios(self.aniversarios)
-            await ctx.send(f'🎉 {ctx.author.mention}, seu aniversário foi salvo como **{data}**!')
-        except ValueError:
-            await ctx.send('❌ Formato inválido! Use o formato **DD-MM**, exemplo: `!setaniversario 20-06`')
+        aniversarios = carregar_aniversarios()
+        user_id = str(ctx.author.id)
+        aniversarios[user_id] = data
+        salvar_aniversarios(aniversarios)
+        await ctx.send(f"✅ {ctx.author.name}, seu aniversário foi salvo como: {data}")
+
+    @commands.command(name='meuaniversario')
+    async def meu_aniversario(self, ctx):
+        """
+        Mostra a data de aniversário do usuário.
+        """
+        aniversarios = carregar_aniversarios()
+        user_id = str(ctx.author.id)
+        if user_id in aniversarios:
+            await ctx.send(f"🎉 {ctx.author.name}, seu aniversário é: {aniversarios[user_id]}")
+        else:
+            await ctx.send(f"❌ {ctx.author.name}, você ainda não cadastrou seu aniversário. Use `!setaniversario <data>`.")
 
     @tasks.loop(hours=24)
-    async def checar_aniversarios(self):
-        hoje = datetime.now().strftime('%d-%m')
-        canal = self.bot.get_channel(ID_CANAL_PARABENS)
-        if not canal:
-            print(f"❌ Canal com ID {ID_CANAL_PARABENS} não encontrado!")
-            return
-
-        for user_id, data in self.aniversarios.items():
-            if data == hoje:
-                user = await self.bot.fetch_user(int(user_id))
-                if user:
-                    await canal.send(f'🎂 Feliz aniversário, {user.mention}! 🎉🎈')
-                    print(f'Parabéns enviados para {user.name}')
-
-    @checar_aniversarios.before_loop
-    async def before_checar(self):
+    async def verificar_aniversarios(self):
         await self.bot.wait_until_ready()
-        print("🔄 Sistema de aniversário iniciado...")
+        hoje = datetime.now().strftime('%d/%m')
+        aniversarios = carregar_aniversarios()
+        canal = self.bot.get_channel(CANAL_ANIVERSARIOS)
+
+        if canal:
+            for user_id, data in aniversarios.items():
+                if data == hoje:
+                    try:
+                        user = await self.bot.fetch_user(int(user_id))
+                        await canal.send(f"🎉 Hoje é aniversário de {user.mention}! Parabéns! 🎂🎈")
+                    except:
+                        print(f"❌ Não consegui encontrar o usuário com ID {user_id}")
+
+    @verificar_aniversarios.before_loop
+    async def before_verificar(self):
+        await self.bot.wait_until_ready()
 
 async def setup(bot):
     await bot.add_cog(Aniversario(bot))
