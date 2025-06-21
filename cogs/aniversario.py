@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime
 
-CAMINHO_JSON = 'C:\Users\Admin\GarotoAranhaBot\cogs\aniversarios.json'
+CAMINHO_JSON = 'C:\\Users\\Admin\\GarotoAranhaBot\\cogs\\aniversarios.json'
 CANAL_ANIVERSARIOS = 1382522505603842110  # ✅ Troque pelo ID do canal onde as mensagens vão ser enviadas
 
 def carregar_aniversarios():
